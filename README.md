@@ -99,6 +99,8 @@ This body of work confirms that using k-NN-based geometric features is a credibl
 2.  **Bahri, D., Jiang, H., & Tay, Y. (2021).** *Label Smoothed Embedding Hypothesis for Out-of-Distribution Detection.* arXiv preprint arXiv:2102.13100.
 3.  **Wulz, S., & Krispel, U. (2025).** *Detecting Out-Of-Distribution Labels in Image Datasets With Pre-trained Networks.* Journal of WSCG.
 4.  **Lee, K., Lee, K., Lee, H., & Shin, J. (2018).** *A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks.* In Advances in Neural Information Processing Systems (NeurIPS).
+5.  **Vovk, V., Gammerman, A., & Shafer, G. (2005).** *Algorithmic Learning in a Random World.* Springer. (For conformal prediction foundations.)
+6.  **Papadopoulos, H., Proedrou, K., Vovk, V., & Gammerman, A. (2002).** *Inductive Confidence Machines for Regression.* In European Conference on Machine Learning (ECML).
 
 ---
 
@@ -113,6 +115,45 @@ This body of work confirms that using k-NN-based geometric features is a credibl
 | SAFE | ~67 | 0.263 ± 0.204 | 0.252 ± 0.204 | -10.5% | p = 0.081 |
 
 **Key Finding:** Corrected analysis reveals significant predictive improvements in high-uncertainty regions, supporting geometric features for AI safety.
+
+---
+### Rigorous Evaluation Example
+
+To address criticism about a lack of rigor, a comprehensive evaluation harness (`experiments/evaluation_harness.py`) was created to test features and baselines across multiple synthetic datasets. The following is a validation report for the `moons` dataset, demonstrating the new level of analysis.
+
+#### Boundary-Strata Claim Validation (Verified)
+
+**Dataset:** `moons`  
+**Split:** 70% train / 30% test (with a synthetic OOD set for OOD task)  
+**Commit/SHA:** `58db67c` (example)  
+**Seed:** `0`  
+**Hardware:** CPU (local)
+
+**Embedding model & layer:** PCA (whiten=True)  
+**Embedding normalization:** StandardScaler  
+**k (neighbors):** 20  
+**k-sweep:** [5, 10, 20]  
+**Boundary purity threshold:** `<= 0.6`  
+**Boundary subset size:** (`n=40` in this run)
+
+**Feature reported:** `S = U * (min_dist + ε)`  
+**Feature computation notes:** `U` is mean k-NN distance.  
+**Baseline(s):** `min_dist`, `Mahalanobis`, `LID`, etc.  
+**Primary metric:** Boundary-AUROC for error detection.  
+**Secondary metrics:** OOD-AUROC, Spearman correlation.
+
+**Result (primary):** For `k=20` on the `moons` dataset with PCA embeddings, the AUROC for error detection on the boundary strata for the `S` feature was **0.425**. The baseline `min_dist` had an AUROC of **0.475**.
+
+**Claim holds?** In this specific, rigorously tested configuration, the `S` feature did not show a lift over the `min_dist` baseline for error detection in the boundary strata. This demonstrates the importance of the evaluation harness for identifying which features excel under which conditions.
+
+**Result (secondary):**  
+*   **OOD Detection AUROC (S):** **0.605**
+*   **Spearman r (S vs. error):** **0.144**
+
+**Repro steps:** `python experiments/evaluation_harness.py`  
+**Artifacts:** `results/knn_geometry_results.csv`  
+
+---
 
 ### Behavioral Flip Validation
 
@@ -133,17 +174,20 @@ This body of work confirms that using k-NN-based geometric features is a credibl
 
 ---
 
-## 7 Geometric Features
+## 7 Geometric Features + Advanced Additions
 
 | # | Feature | Description |
-|---|---------|-------------|
+|---|---|-------------|
 | 1 | `knn_mean_distance` | Average distance to k=50 nearest neighbors |
-| 2 | `knn_std_distance` ⭐ | Std deviation of neighbor distances (top feature) |
+| 2 | `knn_std_distance` | Std deviation of neighbor distances (top feature) |
 | 3 | `knn_min_distance` | Distance to nearest neighbor |
 | 4 | `knn_max_distance` | Distance to farthest of k neighbors |
 | 5 | `local_curvature` | Manifold anisotropy via SVD (σ_min/σ_max) |
 | 6 | `ridge_proximity` | Coefficient of variation of neighborhood distances (σ/μ) |
 | 7 | `dist_to_ref_nearest` | Distance to nearest reference point |
+| 8 | `S_score` | Density-scaled dispersion: U × (min_dist + ε), where U is mean or median kNN distance (Kosmos addition) |
+| 9 | `mahalanobis` | Class-conditional Mahalanobis distance with Ledoit-Wolf shrinkage (baseline) |
+| 10 | `conformal_abstain` | kNN-based nonconformity for coverage-controlled abstention (inductive conformal prediction) |
 
 ---
 

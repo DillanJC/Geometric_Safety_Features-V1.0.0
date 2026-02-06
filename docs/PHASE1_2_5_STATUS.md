@@ -122,3 +122,27 @@ From sensitivity analysis:
 - k=75 performs better than k=50 for gradient magnitude
 - Bandwidth multiplier c=1.2 slightly better than c=1.0
 - Higher k values correlate with stronger signals
+
+## Future Research: Recursive Self-Learning with Geometric Feedback
+
+Not currently pursued, but worth revisiting. The idea: use geometric signals
+(PR, SE, d_eff) as a feedback/regularization signal during recursive
+self-learning, so the model learns to widen the narrow passages rather than
+just detecting them after the fact.
+
+**Potential approach:**
+- PR/SE are SVD-based and differentiable — could serve as a regularization
+  term or reward signal during training
+- Novelty map signatures could guide curriculum (more training cycles on
+  `terra_incognita` and `decision_boundary` regions)
+- The v1.9 reasoning telemetry (PR tracking through steps) is a first step
+  toward closing this loop
+
+**Risks to consider:**
+- Goodhart's Law: optimizing directly for high PR may inflate dimensionality
+  without improving robustness — the metric stops being diagnostic once it
+  becomes the optimization target
+- Distribution shift: each self-learning iteration changes the embedding
+  space, so geometric features from iteration N may not generalize to N+1
+- Constrained geometry near boundaries may be structurally necessary for
+  class separation — widening passages could hurt accuracy

@@ -33,6 +33,7 @@ setup(
     extras_require={
         "plots": ["matplotlib>=3.7.0", "seaborn>=0.12.0"],
         "experiments": ["openai>=1.0.0", "python-dotenv>=1.0.0"],
+        "mcp": ["mcp[cli]>=1.20"],
         "dev": ["pytest>=7.0.0", "black>=23.0.0", "flake8>=6.0.0"],
     },
     keywords="ai-safety geometric-features embeddings uncertainty-quantification",

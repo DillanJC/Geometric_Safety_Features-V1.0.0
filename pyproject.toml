@@ -33,6 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 faiss = ["faiss-cpu>=1.7.0"]
 visualization = ["matplotlib>=3.7.0"]
+mcp = ["mcp[cli]>=1.20"]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
